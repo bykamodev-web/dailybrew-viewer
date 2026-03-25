@@ -21,7 +21,7 @@ function addSecurityHeaders(response: Response): Response {
 
   headers.set(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.coingecko.com; worker-src 'self' blob:; frame-ancestors 'none'"
+    "default-src 'self'; script-src 'self' blob: https://cloud.umami.is; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.coingecko.com https://cloud.umami.is; worker-src 'self' blob:; frame-ancestors 'none'"
   )
   headers.set("X-Frame-Options", "DENY")
   headers.set("X-Content-Type-Options", "nosniff")
