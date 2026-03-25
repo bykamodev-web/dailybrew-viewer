@@ -1,10 +1,15 @@
 let pdfjsLib = null
 let currentPage = null
 let zoomLevel = 1
+let onZoomStateChange = null
 
 const ZOOM_STEP = 0.25
 const ZOOM_MIN = 0.5
 const ZOOM_MAX = 4
+
+export function setZoomCallback(callback) {
+  onZoomStateChange = callback
+}
 
 export async function initPdfJs() {
   if (pdfjsLib) return
@@ -15,7 +20,6 @@ export async function initPdfJs() {
 }
 
 function calcBaseScale(page, canvas) {
-  // Use #viewer-container (the scrollable parent), not #pdf-wrapper
   const container = document.getElementById("viewer-container")
   const vp = page.getViewport({ scale: 1 })
   const scaleByWidth = container.clientWidth / vp.width
@@ -38,6 +42,13 @@ function renderPage(page, canvas, scale) {
   return page.render({ canvasContext: ctx, viewport }).promise
 }
 
+function notifyZoomState() {
+  updateZoomDisplay()
+  if (onZoomStateChange) {
+    onZoomStateChange(zoomLevel > 1)
+  }
+}
+
 export async function renderPdf(arrayBuffer, canvas) {
   await initPdfJs()
 
@@ -45,7 +56,7 @@ export async function renderPdf(arrayBuffer, canvas) {
   currentPage = await pdf.getPage(1)
 
   zoomLevel = 1
-  updateZoomDisplay()
+  notifyZoomState()
 
   const baseScale = calcBaseScale(currentPage, canvas)
   await renderPage(currentPage, canvas, baseScale * zoomLevel)
@@ -61,21 +72,31 @@ export async function renderAtCurrentZoom(canvas) {
 export function zoomIn(canvas) {
   if (zoomLevel >= ZOOM_MAX) return
   zoomLevel = Math.min(zoomLevel + ZOOM_STEP, ZOOM_MAX)
-  updateZoomDisplay()
+  notifyZoomState()
   renderAtCurrentZoom(canvas)
 }
 
 export function zoomOut(canvas) {
   if (zoomLevel <= ZOOM_MIN) return
   zoomLevel = Math.max(zoomLevel - ZOOM_STEP, ZOOM_MIN)
-  updateZoomDisplay()
+  notifyZoomState()
   renderAtCurrentZoom(canvas)
 }
 
 export function zoomReset(canvas) {
   zoomLevel = 1
-  updateZoomDisplay()
+  notifyZoomState()
   renderAtCurrentZoom(canvas)
+}
+
+export function setZoomLevel(canvas, level) {
+  zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, level))
+  notifyZoomState()
+  renderAtCurrentZoom(canvas)
+}
+
+export function getZoomLevel() {
+  return zoomLevel
 }
 
 function updateZoomDisplay() {

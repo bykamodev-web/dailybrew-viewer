@@ -1,11 +1,51 @@
+let hammerInstance = null
+let isZoomed = false
+
+export function setZoomed(zoomed) {
+  isZoomed = zoomed
+  if (hammerInstance) {
+    hammerInstance.get("swipe").set({ enable: !zoomed })
+  }
+}
+
 export function setupSwipe(element, { onSwipeLeft, onSwipeRight }) {
   if (typeof Hammer === "undefined") return
 
-  const mc = new Hammer(element)
-  mc.get("swipe").set({ direction: Hammer.DIRECTION_HORIZONTAL })
+  hammerInstance = new Hammer.Manager(element)
 
-  mc.on("swipeleft", () => onSwipeLeft())
-  mc.on("swiperight", () => onSwipeRight())
+  const swipe = new Hammer.Swipe({ direction: Hammer.DIRECTION_HORIZONTAL })
+  const pinch = new Hammer.Pinch()
+
+  hammerInstance.add([pinch, swipe])
+
+  hammerInstance.on("swipeleft", () => {
+    if (!isZoomed) onSwipeLeft()
+  })
+  hammerInstance.on("swiperight", () => {
+    if (!isZoomed) onSwipeRight()
+  })
+
+  return hammerInstance
+}
+
+export function setupPinchZoom(hammerMc, { onZoomChange }) {
+  if (!hammerMc) return
+
+  let startZoom = 1
+
+  hammerMc.on("pinchstart", () => {
+    startZoom = onZoomChange("get")
+  })
+
+  hammerMc.on("pinchmove", (e) => {
+    const newZoom = Math.max(0.5, Math.min(4, startZoom * e.scale))
+    onZoomChange("set", newZoom)
+  })
+
+  hammerMc.on("pinchend", (e) => {
+    const newZoom = Math.max(0.5, Math.min(4, startZoom * e.scale))
+    onZoomChange("set", newZoom)
+  })
 }
 
 export function setupKeyboard({ onPrev, onNext }) {

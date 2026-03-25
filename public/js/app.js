@@ -1,8 +1,10 @@
 import { fetchPapersList, fetchPaperBytes, fetchPaperMeta } from "./api.js"
-import { initPdfJs, renderPdf, zoomIn, zoomOut, renderAtCurrentZoom } from "./viewer.js"
+import { initPdfJs, renderPdf, zoomIn, zoomOut, renderAtCurrentZoom, setZoomLevel, getZoomLevel, setZoomCallback } from "./viewer.js"
 import {
   setupSwipe,
+  setupPinchZoom,
   setupKeyboard,
+  setZoomed,
   getDateFromHash,
   setDateHash,
   onHashChange,
@@ -168,9 +170,20 @@ async function init() {
     updateUI()
     await loadPaper(papers[currentIndex])
 
-    setupSwipe(document.getElementById("viewer-container"), {
+    // Zoom state callback — disable swipe when zoomed in
+    setZoomCallback((isZoomedIn) => setZoomed(isZoomedIn))
+
+    const hammerMc = setupSwipe(document.getElementById("viewer-container"), {
       onSwipeLeft: goNewer,
       onSwipeRight: goOlder,
+    })
+
+    // Pinch zoom on mobile
+    setupPinchZoom(hammerMc, {
+      onZoomChange: (action, value) => {
+        if (action === "get") return getZoomLevel()
+        setZoomLevel(canvas, value)
+      },
     })
 
     setupKeyboard({
