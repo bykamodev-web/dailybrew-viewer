@@ -264,7 +264,6 @@ header {
   -webkit-overflow-scrolling: touch;
   background: var(--bg-viewer);
   transition: background 0.2s;
-  touch-action: pan-x pan-y;
 }
 
 #pdf-wrapper {

@@ -1,17 +1,27 @@
 let hammerInstance = null
 let isZoomed = false
+let containerEl = null
 
 export function setZoomed(zoomed) {
   isZoomed = zoomed
   if (hammerInstance) {
     hammerInstance.get("swipe").set({ enable: !zoomed })
   }
+  // When zoomed, let the browser handle native scroll (pan)
+  // When not zoomed, let Hammer handle swipe gestures
+  if (containerEl) {
+    containerEl.style.touchAction = zoomed ? "pan-x pan-y" : "none"
+  }
 }
 
 export function setupSwipe(element, { onSwipeLeft, onSwipeRight }) {
   if (typeof Hammer === "undefined") return
 
-  hammerInstance = new Hammer.Manager(element)
+  containerEl = element
+
+  hammerInstance = new Hammer.Manager(element, {
+    touchAction: "none",
+  })
 
   const swipe = new Hammer.Swipe({ direction: Hammer.DIRECTION_HORIZONTAL })
   const pinch = new Hammer.Pinch()
