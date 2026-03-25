@@ -41,7 +41,7 @@ function renderPage(page, canvas, scale) {
 export async function renderPdf(arrayBuffer, canvas) {
   await initPdfJs()
 
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer.slice(0) }).promise
   currentPage = await pdf.getPage(1)
 
   zoomLevel = 1
